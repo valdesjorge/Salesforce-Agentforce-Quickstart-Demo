@@ -39,7 +39,7 @@ variables:
     currentPageType: mutable string
         description: "Page type (record, list, home)"
         visibility: "External"
-    currentRecordId: mutable string
+    currentRecordId: mutable string = ""
         description: "The Salesforce ID of the current record page. Auto-populated by the platform when the agent is opened from a record page."
         visibility: "External"
     resolvedAccountId: mutable string = ""

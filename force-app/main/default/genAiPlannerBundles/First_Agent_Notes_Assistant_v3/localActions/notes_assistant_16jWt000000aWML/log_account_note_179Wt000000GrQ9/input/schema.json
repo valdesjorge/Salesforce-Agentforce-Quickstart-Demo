@@ -1,0 +1,29 @@
+{
+  "required" : [ "varAccountID", "varNoteBody" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "varAccountID" : {
+      "title" : "varAccountID",
+      "description" : "The Salesforce Account ID to link the note to. Use resolvedAccountId.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : false
+    },
+    "varNoteBody" : {
+      "title" : "varNoteBody",
+      "description" : "The summarized meeting notes to save.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "varNoteTitle" : {
+      "title" : "varNoteTitle",
+      "description" : "Auto-generated title in the format \"Meeting Notes - [Account Name] - [Today's Date]\". Do not ask the user for this.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : false
+    }
+  },
+  "lightning:type" : "lightning__objectType",
+  "lightning:textIndexed" : true
+}

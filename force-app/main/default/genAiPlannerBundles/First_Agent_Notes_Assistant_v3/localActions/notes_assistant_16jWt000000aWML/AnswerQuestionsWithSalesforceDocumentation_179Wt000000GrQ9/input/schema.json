@@ -1,0 +1,16 @@
+{
+  "required" : [ "query" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "query" : {
+      "title" : "Query",
+      "description" : "A string created by AI to search Salesforce documentation for product information.",
+      "lightning:type" : "lightning__textType",
+      "einstein:description" : "Required. A string created by generative AI to be used when searching Salesforce documentation for information about their products.",
+      "lightning:isPII" : true,
+      "copilotAction:isUserInput" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType",
+  "lightning:textIndexed" : true
+}
