@@ -73,13 +73,11 @@ start_agent notes_assistant:
             else:
                 | Greet the user and ask: "Which account would you like to log notes for? Please provide the account name."
                 | When the user provides an account name, call identify_account with that name and objectApiName="Account".
-                | Review the searchResults. If a single clear match is returned, confirm the account name with the user and set resolvedAccountId to that record's ID. If multiple results are returned, present a numbered list of account names and ask the user to choose one, then set resolvedAccountId accordingly. Do not proceed until an account is confirmed.
+                | Examine the searchResults carefully. Each result is a Salesforce record that contains an "Id" field (an 18-character Salesforce record ID) and a "Name" field. Extract and internally remember BOTH the Account Name AND its Id (the "Id" field) from the matched record — you will need this Id later to log the note.
+                | If a single clear match is returned, confirm the account name with the user. If multiple results are returned, present a numbered list of account names and ask the user to choose one. Do not proceed until an account is confirmed.
 
             # Phase 2: Collect meeting notes
-            if @variables.resolvedAccountId == "":
-                | Wait until the account has been confirmed before proceeding.
-            else:
-                | Ask the user: "Please paste or share the meeting notes, call log, or transcript you'd like to log."
+            | Once an account is confirmed, ask the user: "Please paste or share the meeting notes, call log, or transcript you'd like to log."
 
             # Phase 3: Summarize the notes (LLM-native — no action call needed)
             | Once the user provides the notes text, summarize them yourself into a structured summary with these sections:
@@ -91,7 +89,7 @@ start_agent notes_assistant:
 
             # Phase 4: Log the note to Salesforce
             | After presenting the summary, ask: "Shall I save this as a note on the account?" If the user confirms (or says "yes", "log it", "save it"), call log_account_note with:
-            | - varAccountID: the resolvedAccountId
+            | - varAccountID: the Account record Id you extracted from searchResults (or currentRecordId if this session started from a record page) — this is a required 18-character Salesforce ID, NOT the account name
             | - varNoteBody: the summary you produced
             | - varNoteTitle: auto-generate in the format "Meeting Notes - [Account Name] - [Today's Date]" — do not ask the user for this
             | Confirm success once logged.
@@ -114,7 +112,7 @@ start_agent notes_assistant:
                 with recordName=...
                 with objectApiName="Account"
             log_note: @actions.log_account_note
-                with varAccountID=@variables.resolvedAccountId
+                with varAccountID=...
                 with varNoteBody=...
                 with varNoteTitle=...
             web_search: @actions.WebSearch
