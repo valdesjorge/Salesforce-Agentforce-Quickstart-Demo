@@ -1,4 +1,4 @@
-# salesforce-agentforce-quickstart
+# Salesforce-Agentforce-Quickstart-Demo
 
 A minimal, deployable Agentforce demo built on a Salesforce SDO (Sales Demo Org). This project showcases a **First Agent Notes Assistant** — an AI agent that helps sales reps capture, summarize, and follow up on meeting notes directly from Salesforce.
 

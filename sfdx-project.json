@@ -5,7 +5,7 @@
       "default": true
     }
   ],
-  "name": "salesforce-agentforce-quickstart",
+  "name": "Salesforce-Agentforce-Quickstart-Demo",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
   "sourceApiVersion": "66.0"
