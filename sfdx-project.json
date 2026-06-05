@@ -5,7 +5,7 @@
       "default": true
     }
   ],
-  "name": "Hackathon Belgium Salesforce Agentforce",
+  "name": "salesforce-agentforce-quickstart",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
   "sourceApiVersion": "66.0"
