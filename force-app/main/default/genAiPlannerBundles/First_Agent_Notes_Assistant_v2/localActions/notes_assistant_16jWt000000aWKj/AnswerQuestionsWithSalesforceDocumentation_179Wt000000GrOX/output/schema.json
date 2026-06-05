@@ -1,0 +1,17 @@
+{
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "helpDocumentationSummary" : {
+      "title" : "Salesforce Documentation Summary",
+      "description" : "A rich text summary of Salesforce documentation with links to source articles.",
+      "maxLength" : 100000,
+      "lightning:type" : "lightning__richTextType",
+      "einstein:description" : "A string formatted as rich text that includes a summary of the information about Salesforce products retrieved from the Salesforce documentation and links to the source articles.",
+      "lightning:isPII" : false,
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType",
+  "lightning:textIndexed" : true
+}

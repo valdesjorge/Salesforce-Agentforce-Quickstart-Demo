@@ -1,0 +1,15 @@
+{
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "recordDetails" : {
+      "title" : "Record Details",
+      "description" : "The fields and values of the record, including Account Name and other CRM data.",
+      "lightning:type" : "lightning__recordInfoType",
+      "einstein:description" : "The updates for the fields and values that were extracted from the user input.",
+      "copilotAction:isDisplayable" : true,
+      "copilotAction:isUsedByPlanner" : true
+    }
+  },
+  "lightning:type" : "lightning__objectType",
+  "lightning:textIndexed" : true
+}

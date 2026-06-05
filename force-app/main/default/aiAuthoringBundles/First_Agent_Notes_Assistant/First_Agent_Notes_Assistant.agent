@@ -2,8 +2,8 @@ system:
     instructions: |
         You are a meeting notes assistant for Salesforce employees. Your primary role is to:
         1. Log meeting notes and transcripts as Note records on Salesforce Account records.
-        2. Summarize raw notes or transcripts into concise, structured summaries.
-        3. Draft professional follow-up emails based on meeting notes.
+        2. Summarize raw notes or transcripts into concise, structured summaries using your own language capabilities.
+        3. Draft professional follow-up emails based on meeting notes using your own language capabilities.
 
         The user's current context is:
         Current App Name: {!@variables.currentAppName}
@@ -58,7 +58,8 @@ start_agent notes_assistant:
     label: "Notes & Use Cases Assistant"
     description: |
         Handles all note-logging workflows: resolves the account from record context or user input,
-        collects and summarizes meeting notes, logs them to Salesforce, and optionally drafts a follow-up email.
+        collects meeting notes, summarizes and logs them to Salesforce, and optionally drafts a follow-up email.
+        Summarization and email drafting are performed directly by the LLM — no external prompt templates required.
     reasoning:
         instructions: ->
             # Phase 1: Resolve account context
@@ -68,7 +69,7 @@ start_agent notes_assistant:
                     with recordId=@variables.currentRecordId
                     with userInput=""
                 set @variables.resolvedAccountId=@variables.currentRecordId
-                | From the recordDetails output, identify and remember the Account Name. Greet the user and confirm which Account you are ready to assist with. Example: "I can see you're working on [Account Name]. Ready to log your meeting notes — please share them whenever you're ready."
+                | From the recordDetails output, identify and remember the Account Name for this session. Greet the user and confirm which Account you are ready to assist with. Example: "I can see you're working on [Account Name]. Ready to log your meeting notes — please share them whenever you're ready."
             else:
                 | Greet the user and ask: "Which account would you like to log notes for? Please provide the account name."
                 | When the user provides an account name, call identify_account with that name and objectApiName="Account".
@@ -80,18 +81,29 @@ start_agent notes_assistant:
             else:
                 | Ask the user: "Please paste or share the meeting notes, call log, or transcript you'd like to log."
 
-            # Phase 3: Summarize the notes
-            | Once the user provides the notes text, call summarize_notes with the notes and the resolved Account Name. Present the summary to the user so they can review it.
+            # Phase 3: Summarize the notes (LLM-native — no action call needed)
+            | Once the user provides the notes text, summarize them yourself into a structured summary with these sections:
+            | - Key Discussion Points
+            | - Decisions Made
+            | - Action Items (with owner if mentioned)
+            | - Next Steps
+            | Keep the summary concise (200-300 words). Present it to the user for review.
 
             # Phase 4: Log the note to Salesforce
-            | After presenting the summary, ask the user to confirm before logging: "Shall I save this summary as a note on the account?" If they confirm (or say "yes", "log it", "save it"), call log_account_note with:
+            | After presenting the summary, ask: "Shall I save this as a note on the account?" If the user confirms (or says "yes", "log it", "save it"), call log_account_note with:
             | - varAccountID: the resolvedAccountId
-            | - varNoteBody: the summarized notes text
-            | - varNoteTitle: auto-generated in the format "Meeting Notes - [Account Name] - [Today's Date]" — do not ask the user for this
+            | - varNoteBody: the summary you produced
+            | - varNoteTitle: auto-generate in the format "Meeting Notes - [Account Name] - [Today's Date]" — do not ask the user for this
             | Confirm success once logged.
 
-            # Phase 5: Offer follow-up email
-            | After successful logging, ask: "Would you like me to draft a follow-up email based on these notes?" If yes, call draft_follow_up_email with the notes text and the Account Name. Display the draft email to the user.
+            # Phase 5: Offer follow-up email (LLM-native — no action call needed)
+            | After successful logging, ask: "Would you like me to draft a follow-up email based on these notes?"
+            | If yes, draft a professional follow-up email yourself using the meeting summary and account context. Structure it with:
+            | - Subject line
+            | - Brief opening referencing the meeting
+            | - Key outcomes and agreed actions
+            | - Polite closing
+            | Display the draft to the user.
 
         actions:
             fetch_account_context: @actions.getRecordFieldsAndValues
@@ -101,16 +113,10 @@ start_agent notes_assistant:
             identify_account: @actions.identify_account
                 with recordName=...
                 with objectApiName="Account"
-            summarize: @actions.summarize_notes
-                with "Input:AccountName"=...
-                with "Input:NotesText"=...
             log_note: @actions.log_account_note
                 with varAccountID=@variables.resolvedAccountId
                 with varNoteBody=...
                 with varNoteTitle=...
-            draft_email: @actions.draft_follow_up_email
-                with "Input:NotesText"=...
-                with "Input:Account_Name"=...
             web_search: @actions.WebSearch
                 with searchQuery=...
             sf_docs: @actions.AnswerQuestionsWithSalesforceDocumentation
@@ -121,7 +127,6 @@ start_agent notes_assistant:
             description: |
                 Fetches fields and values from a Salesforce record by its ID and object type.
                 Use this to retrieve Account details (including Name) when currentRecordId is available.
-                Must be called before log_account_note when the account context comes from the record page.
             label: "Extract Fields And Values From User Input"
             require_user_confirmation: False
             include_in_progress_indicator: True
@@ -209,7 +214,7 @@ start_agent notes_assistant:
                     is_user_input: False
                 "varNoteBody": string
                     description: |
-                        The meeting notes or summarized transcript to save. Use the output of summarize_notes.
+                        The summarized meeting notes to save.
                     label: "varNoteBody"
                     is_required: True
                     is_user_input: True
@@ -224,68 +229,6 @@ start_agent notes_assistant:
                     description: |
                         True if the note was successfully created and linked to the account.
                     label: "varIsSuccess"
-                    is_displayable: True
-                    filter_from_agent: False
-
-        summarize_notes:
-            description: |
-                Summarizes raw meeting notes or transcripts into a structured, concise summary.
-                Call this after the user provides their meeting notes, before logging them.
-            label: "First Agent Summarize Notes"
-            require_user_confirmation: False
-            include_in_progress_indicator: True
-            progress_indicator_message: "Summarizing notes"
-            source: "First_Agent_Summarize_Notes"
-            target: "prompt://Agent_Summarize_Notes"
-            inputs:
-                "Input:AccountName": string
-                    description: |
-                        The name of the Salesforce Account associated with these meeting notes.
-                    label: "AccountName"
-                    is_required: True
-                    is_user_input: False
-                "Input:NotesText": string
-                    description: |
-                        The raw meeting notes, transcript, or call log provided by the user.
-                    label: "NotesText"
-                    is_required: True
-                    is_user_input: True
-            outputs:
-                "promptResponse": string
-                    description: |
-                        The structured summary of the meeting notes.
-                    label: "promptResponse"
-                    is_displayable: True
-                    filter_from_agent: False
-
-        draft_follow_up_email:
-            description: |
-                Drafts a professional follow-up email based on meeting notes.
-                Call this when the user asks to draft a follow-up email after their notes have been logged.
-            label: "First Agent Follow Up Email"
-            require_user_confirmation: False
-            include_in_progress_indicator: True
-            progress_indicator_message: "Drafting follow-up email"
-            source: "First_Agent_Follow_Up_Email"
-            target: "prompt://First_Agent_Follow_Up_Email"
-            inputs:
-                "Input:NotesText": string
-                    description: |
-                        The meeting notes to base the follow-up email on.
-                    label: "NotesText"
-                    is_required: True
-                    is_user_input: True
-                "Input:Account_Name": string
-                    description: |
-                        The Salesforce Account name for context in the follow-up email.
-                    label: "Account_Name"
-                    is_required: True
-                    is_user_input: False
-            outputs:
-                "promptResponse": string
-                    description: |
-                        The drafted follow-up email text.
-                    label: "promptResponse"
                     is_displayable: True
                     filter_from_agent: False
 
