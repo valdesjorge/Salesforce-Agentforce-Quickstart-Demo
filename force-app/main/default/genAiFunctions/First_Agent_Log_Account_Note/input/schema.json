@@ -1,0 +1,28 @@
+{
+  "required" : [ "varAccountID", "varNoteBody" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "varAccountID" : {
+      "title" : "varAccountID",
+      "description" : "The unique Salesforce 18-character ID of the Account record associated with the meeting. This should be automatically extracted from the active page context ($Input.Account.Id) or identified by the Account Name mentioned in the user's prompt",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "varNoteBody" : {
+      "title" : "varNoteBody",
+      "description" : "The raw meeting notes, text blocks, call logs, or audio transcripts provided by the user that need to be analyzed, summarized, and saved to Salesforce",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "varNoteTitle" : {
+      "title" : "varNoteTitle",
+      "description" : "The title assigned to the created note record. The agent should automatically generate this in the format 'Meeting Notes - [Account Name] - [Current Date]' without asking the user for input",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : false
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}

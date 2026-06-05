@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiFunction xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>This prompt drafts a follow up email based on the inputted notes</description>
+    <developerName>First_Agent_Follow_Up_Email</developerName>
+    <invocationTarget>First_Agent_Follow_Up_Email</invocationTarget>
+    <invocationTargetType>generatePromptResponse</invocationTargetType>
+    <isConfirmationRequired>false</isConfirmationRequired>
+    <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+    <localDeveloperName>First_Agent_Follow_Up_Email</localDeveloperName>
+    <masterLabel>First Agent Follow Up Email</masterLabel>
+    <progressIndicatorMessage>Drafting Email</progressIndicatorMessage>
+</GenAiFunction>

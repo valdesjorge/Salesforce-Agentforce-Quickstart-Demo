@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiFunction xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>This prompt summarizes the notes as inputted in the agent</description>
+    <developerName>First_Agent_Summarize_Notes</developerName>
+    <invocationTarget>Agent_Summarize_Notes</invocationTarget>
+    <invocationTargetType>generatePromptResponse</invocationTargetType>
+    <isConfirmationRequired>false</isConfirmationRequired>
+    <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+    <localDeveloperName>First_Agent_Summarize_Notes</localDeveloperName>
+    <masterLabel>First Agent Summarize Notes</masterLabel>
+    <progressIndicatorMessage>Summarizing Notes</progressIndicatorMessage>
+</GenAiFunction>

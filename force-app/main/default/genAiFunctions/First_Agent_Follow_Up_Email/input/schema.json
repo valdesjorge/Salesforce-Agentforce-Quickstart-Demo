@@ -1,0 +1,35 @@
+{
+  "required" : [ "Input:NotesText", "Input:Account_Name" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "Input:NotesText" : {
+      "title" : "NotesText",
+      "description" : "The raw meeting transcript or text notes provided by the user that need a summary",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "Input:Account_Name" : {
+      "title" : "AccountName",
+      "description" : "The Salesforce Account record associated with these notes",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "outputLanguage" : {
+      "title" : "Output language",
+      "description" : "Optional. Specify the response language using the appropriate two-character language code or five-character locale code (for example, en_US, en_GB, es, es_MX).",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : false
+    },
+    "isPreviewOnly" : {
+      "title" : "Preview Only",
+      "description" : "Resolves the prompt template without generating an LLM response.",
+      "lightning:type" : "lightning__booleanType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : false
+    }
+  },
+  "lightning:type" : "lightning__objectType"
+}
