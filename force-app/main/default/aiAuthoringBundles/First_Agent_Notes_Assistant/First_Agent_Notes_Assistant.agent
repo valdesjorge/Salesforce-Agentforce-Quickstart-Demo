@@ -1,0 +1,361 @@
+system:
+    instructions: |
+        You are a meeting notes assistant for Salesforce employees. Your primary role is to:
+        1. Log meeting notes and transcripts as Note records on Salesforce Account records.
+        2. Summarize raw notes or transcripts into concise, structured summaries.
+        3. Draft professional follow-up emails based on meeting notes.
+
+        The user's current context is:
+        Current App Name: {!@variables.currentAppName}
+        Current Object Name: {!@variables.currentObjectApiName}
+        Current Page Type: {!@variables.currentPageType}
+        Current Record ID: {!@variables.currentRecordId}
+
+        Always be concise, professional, and focused on the note-taking workflow.
+    messages:
+        welcome: |
+            Hi! I'm your Notes Assistant. I can log meeting notes, summarize transcripts, and draft follow-up emails for your Salesforce accounts. How can I help you today?
+        error: "Something went wrong. Please try again."
+
+config:
+    agent_label: "First Agent Notes Assistant"
+    agent_template: "EmployeeCopilot__AgentforceEmployeeAgent"
+    developer_name: "First_Agent_Notes_Assistant"
+    agent_type: "AgentforceEmployeeAgent"
+    description: "Employee agent that logs meeting notes to Salesforce Account records, summarizes transcripts, and drafts follow-up emails."
+
+language:
+    default_locale: "en_US"
+    additional_locales: "en_GB"
+    all_additional_locales: False
+
+variables:
+    currentAppName: mutable string
+        description: "Salesforce Application Name"
+        visibility: "External"
+    currentObjectApiName: mutable string
+        description: "The API name of the current Salesforce object"
+        visibility: "External"
+    currentPageType: mutable string
+        description: "Page type (record, list, home)"
+        visibility: "External"
+    currentRecordId: mutable string
+        description: "The Salesforce ID of the current record page. Auto-populated by the platform when the agent is opened from a record page."
+        visibility: "External"
+    resolvedAccountId: mutable string = ""
+        description: "The Salesforce Account ID resolved for the current session."
+    VerifiedCustomerId: mutable string
+        description: "This variable may also be referred to as VerifiedCustomerId"
+        visibility: "Internal"
+
+knowledge:
+    rag_feature_config_id: ""
+    citations_url: ""
+    citations_enabled: False
+
+
+start_agent notes_assistant:
+    label: "Notes & Use Cases Assistant"
+    description: |
+        Handles all note-logging workflows: resolves the account from record context or user input,
+        collects and summarizes meeting notes, logs them to Salesforce, and optionally drafts a follow-up email.
+    reasoning:
+        instructions: ->
+            # Phase 1: Resolve account context
+            if @variables.currentRecordId != "":
+                run @actions.getRecordFieldsAndValues
+                    with objectType="Account"
+                    with recordId=@variables.currentRecordId
+                    with userInput=""
+                set @variables.resolvedAccountId=@variables.currentRecordId
+                | From the recordDetails output, identify and remember the Account Name. Greet the user and confirm which Account you are ready to assist with. Example: "I can see you're working on [Account Name]. Ready to log your meeting notes — please share them whenever you're ready."
+            else:
+                | Greet the user and ask: "Which account would you like to log notes for? Please provide the account name."
+                | When the user provides an account name, call identify_account with that name and objectApiName="Account".
+                | Review the searchResults. If a single clear match is returned, confirm the account name with the user and set resolvedAccountId to that record's ID. If multiple results are returned, present a numbered list of account names and ask the user to choose one, then set resolvedAccountId accordingly. Do not proceed until an account is confirmed.
+
+            # Phase 2: Collect meeting notes
+            if @variables.resolvedAccountId == "":
+                | Wait until the account has been confirmed before proceeding.
+            else:
+                | Ask the user: "Please paste or share the meeting notes, call log, or transcript you'd like to log."
+
+            # Phase 3: Summarize the notes
+            | Once the user provides the notes text, call summarize_notes with the notes and the resolved Account Name. Present the summary to the user so they can review it.
+
+            # Phase 4: Log the note to Salesforce
+            | After presenting the summary, ask the user to confirm before logging: "Shall I save this summary as a note on the account?" If they confirm (or say "yes", "log it", "save it"), call log_account_note with:
+            | - varAccountID: the resolvedAccountId
+            | - varNoteBody: the summarized notes text
+            | - varNoteTitle: auto-generated in the format "Meeting Notes - [Account Name] - [Today's Date]" — do not ask the user for this
+            | Confirm success once logged.
+
+            # Phase 5: Offer follow-up email
+            | After successful logging, ask: "Would you like me to draft a follow-up email based on these notes?" If yes, call draft_follow_up_email with the notes text and the Account Name. Display the draft email to the user.
+
+        actions:
+            fetch_account_context: @actions.getRecordFieldsAndValues
+                with objectType="Account"
+                with recordId=@variables.currentRecordId
+                with userInput=""
+            identify_account: @actions.identify_account
+                with recordName=...
+                with objectApiName="Account"
+            summarize: @actions.summarize_notes
+                with "Input:AccountName"=...
+                with "Input:NotesText"=...
+            log_note: @actions.log_account_note
+                with varAccountID=@variables.resolvedAccountId
+                with varNoteBody=...
+                with varNoteTitle=...
+            draft_email: @actions.draft_follow_up_email
+                with "Input:NotesText"=...
+                with "Input:Account_Name"=...
+            web_search: @actions.WebSearch
+                with searchQuery=...
+            sf_docs: @actions.AnswerQuestionsWithSalesforceDocumentation
+                with query=...
+
+    actions:
+        getRecordFieldsAndValues:
+            description: |
+                Fetches fields and values from a Salesforce record by its ID and object type.
+                Use this to retrieve Account details (including Name) when currentRecordId is available.
+                Must be called before log_account_note when the account context comes from the record page.
+            label: "Extract Fields And Values From User Input"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+            progress_indicator_message: "Fetching account details"
+            source: "EmployeeCopilot__ExtractFieldsAndValuesFromUserInput"
+            target: "standardInvocableAction://getRecordFieldsAndValues"
+            inputs:
+                "recordId": object
+                    description: |
+                        The ID of the record to fetch. Pass currentRecordId when resolving account context from the record page.
+                    label: "Record ID"
+                    is_required: True
+                    is_user_input: False
+                    complex_data_type_name: "lightning__recordIdType"
+                "objectType": string
+                    description: |
+                        The API name of the Salesforce object type, such as Account.
+                    label: "Object Type"
+                    is_required: True
+                    is_user_input: False
+                "userInput": string
+                    description: |
+                        The complete original user input. Pass empty string when fetching account context automatically.
+                    label: "User Input"
+                    is_required: True
+                    is_user_input: True
+            outputs:
+                "recordDetails": object
+                    description: |
+                        The fields and values of the record, including Account Name and other CRM data.
+                    label: "Record Details"
+                    is_displayable: True
+                    filter_from_agent: False
+                    complex_data_type_name: "lightning__recordInfoType"
+
+        identify_account:
+            description: |
+                Searches for Salesforce Account records by name and returns a list of matching records.
+                Use this when the user provides an account name instead of opening the agent from a record page.
+            label: "Identify Record by Name"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+            progress_indicator_message: "Searching for account"
+            source: "EmployeeCopilot__IdentifyRecordByName"
+            target: "standardInvocableAction://identifyRecordByName"
+            inputs:
+                "recordName": string
+                    description: |
+                        The name or partial name of the Account to search for, as provided by the user.
+                    label: "recordName"
+                    is_required: True
+                    is_user_input: True
+                "objectApiName": string
+                    description: |
+                        The API name of the Salesforce object. Use "Account" to search only among accounts.
+                    label: "objectApiName"
+                    is_required: False
+                    is_user_input: False
+            outputs:
+                "searchResults": list[object]
+                    description: |
+                        A list of matching Salesforce records in descending order of relevance.
+                    label: "searchResults"
+                    is_displayable: True
+                    filter_from_agent: False
+                    complex_data_type_name: "lightning__recordInfoType"
+
+        log_account_note:
+            description: |
+                Saves meeting notes as a Note record linked to a Salesforce Account.
+                Call this after the user confirms the summarized notes and the account has been resolved.
+                Generate the note title automatically in the format "Meeting Notes - [Account Name] - [Date]".
+            label: "First Agent Log Account Note"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+            progress_indicator_message: "Logging notes"
+            source: "First_Agent_Log_Account_Note"
+            target: "flow://First_Agent_Log_Account_Note"
+            inputs:
+                "varAccountID": string
+                    description: |
+                        The Salesforce Account ID to link the note to. Use resolvedAccountId.
+                    label: "varAccountID"
+                    is_required: True
+                    is_user_input: False
+                "varNoteBody": string
+                    description: |
+                        The meeting notes or summarized transcript to save. Use the output of summarize_notes.
+                    label: "varNoteBody"
+                    is_required: True
+                    is_user_input: True
+                "varNoteTitle": string
+                    description: |
+                        Auto-generated title in the format "Meeting Notes - [Account Name] - [Today's Date]". Do not ask the user for this.
+                    label: "varNoteTitle"
+                    is_required: False
+                    is_user_input: False
+            outputs:
+                "varIsSuccess": boolean
+                    description: |
+                        True if the note was successfully created and linked to the account.
+                    label: "varIsSuccess"
+                    is_displayable: True
+                    filter_from_agent: False
+
+        summarize_notes:
+            description: |
+                Summarizes raw meeting notes or transcripts into a structured, concise summary.
+                Call this after the user provides their meeting notes, before logging them.
+            label: "First Agent Summarize Notes"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+            progress_indicator_message: "Summarizing notes"
+            source: "First_Agent_Summarize_Notes"
+            target: "prompt://Agent_Summarize_Notes"
+            inputs:
+                "Input:AccountName": string
+                    description: |
+                        The name of the Salesforce Account associated with these meeting notes.
+                    label: "AccountName"
+                    is_required: True
+                    is_user_input: False
+                "Input:NotesText": string
+                    description: |
+                        The raw meeting notes, transcript, or call log provided by the user.
+                    label: "NotesText"
+                    is_required: True
+                    is_user_input: True
+            outputs:
+                "promptResponse": string
+                    description: |
+                        The structured summary of the meeting notes.
+                    label: "promptResponse"
+                    is_displayable: True
+                    filter_from_agent: False
+
+        draft_follow_up_email:
+            description: |
+                Drafts a professional follow-up email based on meeting notes.
+                Call this when the user asks to draft a follow-up email after their notes have been logged.
+            label: "First Agent Follow Up Email"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+            progress_indicator_message: "Drafting follow-up email"
+            source: "First_Agent_Follow_Up_Email"
+            target: "prompt://First_Agent_Follow_Up_Email"
+            inputs:
+                "Input:NotesText": string
+                    description: |
+                        The meeting notes to base the follow-up email on.
+                    label: "NotesText"
+                    is_required: True
+                    is_user_input: True
+                "Input:Account_Name": string
+                    description: |
+                        The Salesforce Account name for context in the follow-up email.
+                    label: "Account_Name"
+                    is_required: True
+                    is_user_input: False
+            outputs:
+                "promptResponse": string
+                    description: |
+                        The drafted follow-up email text.
+                    label: "promptResponse"
+                    is_displayable: True
+                    filter_from_agent: False
+
+        WebSearch:
+            description: |
+                Retrieves real-time information from the web. Use for questions about account news,
+                market trends, competitor details, or any context not available in Salesforce CRM.
+            label: "Search The Web"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+            progress_indicator_message: "Searching the web"
+            source: "EmployeeCopilot__WebSearch"
+            target: "standardInvocableAction://webSearchStream"
+            inputs:
+                "searchQuery": string
+                    description: |
+                        Free-text query specifying what to search for.
+                    label: "Search Query"
+                    is_required: True
+                    is_user_input: True
+                "searchProvider": string
+                    description: |
+                        The search provider to use. Leave empty to use the default.
+                    label: "Search Provider"
+                    is_required: False
+                    is_user_input: False
+                "siteFilter": string
+                    description: |
+                        Comma-separated list of up to 10 allowed domains to filter search results.
+                    label: "Allowed Domains"
+                    is_required: False
+                    is_user_input: False
+            outputs:
+                "webSearchSummary": object
+                    description: |
+                        A summary of information retrieved from the web search.
+                    label: "Summary of Web Search"
+                    is_displayable: False
+                    filter_from_agent: False
+                    complex_data_type_name: "lightning__richTextType"
+                "citationSources": object
+                    description: |
+                        Source links from the retrieved content used in the web search summary.
+                    label: "Citation Sources"
+                    is_displayable: False
+                    filter_from_agent: False
+                    complex_data_type_name: "@apexClassType/AiCopilot__GenAiCitationInput"
+
+        AnswerQuestionsWithSalesforceDocumentation:
+            description: |
+                Answers questions about how to use Salesforce products using official Salesforce documentation.
+                This action is automatically invoked if no other actions are available for the utterance.
+            label: "Answer Questions with Salesforce Documentation (Beta)"
+            require_user_confirmation: False
+            include_in_progress_indicator: True
+            progress_indicator_message: "Searching Salesforce Documentation"
+            source: "AdminCopilot__AnswerQuestionsWithSalesforceDocumentation"
+            target: "standardInvocableAction://answerQuestionsWithSalesforceDocumentation"
+            inputs:
+                "query": string
+                    description: |
+                        A string created by AI to search Salesforce documentation for product information.
+                    label: "Query"
+                    is_required: True
+                    is_user_input: True
+            outputs:
+                "helpDocumentationSummary": object
+                    description: |
+                        A rich text summary of Salesforce documentation with links to source articles.
+                    label: "Salesforce Documentation Summary"
+                    is_displayable: True
+                    filter_from_agent: False
+                    complex_data_type_name: "lightning__richTextType"

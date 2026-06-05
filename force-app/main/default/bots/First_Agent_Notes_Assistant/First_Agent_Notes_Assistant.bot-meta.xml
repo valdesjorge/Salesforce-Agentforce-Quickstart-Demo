@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bot xmlns="http://soap.sforce.com/2006/04/metadata">
+    <agentDSLEnabled>true</agentDSLEnabled>
+    <agentTemplate>EmployeeCopilot__AgentforceEmployeeAgent</agentTemplate>
+    <agentType>AgentforceEmployeeAgent</agentType>
+    <botMlDomain>
+        <label>First Agent Notes Assistant</label>
+        <name>First_Agent_Notes_Assistant</name>
+    </botMlDomain>
+    <botSource>None</botSource>
+    <description>Employee agent that logs meeting notes to Salesforce Account records, summarizes transcripts, and drafts follow-up emails.</description>
+    <label>First Agent Notes Assistant</label>
+    <logPrivateConversationData>false</logPrivateConversationData>
+    <richContentEnabled>true</richContentEnabled>
+    <sessionTimeout>0</sessionTimeout>
+    <type>InternalCopilot</type>
+</Bot>

@@ -1,0 +1,22 @@
+{
+  "required" : [ "recordName" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "recordName" : {
+      "title" : "recordName",
+      "description" : "The name or partial name of the Account to search for, as provided by the user.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "objectApiName" : {
+      "title" : "objectApiName",
+      "description" : "The API name of the Salesforce object. Use \"Account\" to search only among accounts.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : false
+    }
+  },
+  "lightning:type" : "lightning__objectType",
+  "lightning:textIndexed" : true
+}

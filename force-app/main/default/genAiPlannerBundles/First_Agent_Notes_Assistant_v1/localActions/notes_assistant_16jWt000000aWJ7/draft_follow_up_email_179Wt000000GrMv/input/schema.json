@@ -1,0 +1,22 @@
+{
+  "required" : [ "Input:NotesText", "Input:Account_Name" ],
+  "unevaluatedProperties" : false,
+  "properties" : {
+    "Input:NotesText" : {
+      "title" : "NotesText",
+      "description" : "The meeting notes to base the follow-up email on.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : true
+    },
+    "Input:Account_Name" : {
+      "title" : "Account_Name",
+      "description" : "The Salesforce Account name for context in the follow-up email.",
+      "lightning:type" : "lightning__textType",
+      "lightning:isPII" : false,
+      "copilotAction:isUserInput" : false
+    }
+  },
+  "lightning:type" : "lightning__objectType",
+  "lightning:textIndexed" : true
+}

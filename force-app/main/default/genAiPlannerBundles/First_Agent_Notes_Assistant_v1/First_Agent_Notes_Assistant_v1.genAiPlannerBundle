@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<GenAiPlannerBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Employee agent that logs meeting notes to Salesforce Account records, summarizes transcripts, and drafts follow-up emails.</description>
+    <localTopicLinks>
+        <genAiPluginName>notes_assistant_16jWt000000aWJ7</genAiPluginName>
+    </localTopicLinks>
+    <localTopics>
+        <fullName>notes_assistant_16jWt000000aWJ7</fullName>
+        <canEscalate>false</canEscalate>
+        <description>Handles all note-logging workflows: resolves the account from record context or user input,
+collects and summarizes meeting notes, logs them to Salesforce, and optionally drafts a follow-up email.</description>
+        <developerName>notes_assistant_16jWt000000aWJ7</developerName>
+        <genAiPluginInstructions>
+            <description>You are a meeting notes assistant for Salesforce employees. Your primary role is to:
+1. Log meeting notes and transcripts as Note records on Salesforce Account records.
+2. Summarize raw notes or transcripts into concise, structured summaries.
+3. Draft professional follow-up emails based on meeting notes.
+
+The user&apos;s current context is:
+Current App Name: {{state.currentAppName}}
+Current Object Name: {{state.currentObjectApiName}}
+Current Page Type: {{state.currentPageType}}
+Current Record ID: {{state.currentRecordId}}
+
+Always be concise, professional, and focused on the note-taking workflow.</description>
+            <developerName>instruction0_179Wt000000GrMv</developerName>
+            <language>en_US</language>
+            <masterLabel>instruction0_179Wt000000GrMv</masterLabel>
+            <sortOrder>1</sortOrder>
+        </genAiPluginInstructions>
+        <language>en_US</language>
+        <localActionLinks>
+            <functionName>identify_account_179Wt000000GrMv</functionName>
+        </localActionLinks>
+        <localActionLinks>
+            <functionName>WebSearch_179Wt000000GrMv</functionName>
+        </localActionLinks>
+        <localActionLinks>
+            <functionName>summarize_notes_179Wt000000GrMv</functionName>
+        </localActionLinks>
+        <localActionLinks>
+            <functionName>getRecordFieldsAndValues_179Wt000000GrMv</functionName>
+        </localActionLinks>
+        <localActionLinks>
+            <functionName>log_account_note_179Wt000000GrMv</functionName>
+        </localActionLinks>
+        <localActionLinks>
+            <functionName>draft_follow_up_email_179Wt000000GrMv</functionName>
+        </localActionLinks>
+        <localActionLinks>
+            <functionName>AnswerQuestionsWithSalesforceDocumentation_179Wt000000GrMv</functionName>
+        </localActionLinks>
+        <localActions>
+            <fullName>summarize_notes_179Wt000000GrMv</fullName>
+            <description>Summarizes raw meeting notes or transcripts into a structured, concise summary.
+Call this after the user provides their meeting notes, before logging them.</description>
+            <developerName>summarize_notes_179Wt000000GrMv</developerName>
+            <invocationTarget>Agent_Summarize_Notes</invocationTarget>
+            <invocationTargetType>generatePromptResponse</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>summarize_notes</localDeveloperName>
+            <masterLabel>First Agent Summarize Notes</masterLabel>
+            <progressIndicatorMessage>Summarizing notes</progressIndicatorMessage>
+            <source>First_Agent_Summarize_Notes</source>
+        </localActions>
+        <localActions>
+            <fullName>log_account_note_179Wt000000GrMv</fullName>
+            <description>Saves meeting notes as a Note record linked to a Salesforce Account.
+Call this after the user confirms the summarized notes and the account has been resolved.
+Generate the note title automatically in the format &quot;Meeting Notes - [Account Name] - [Date]&quot;.</description>
+            <developerName>log_account_note_179Wt000000GrMv</developerName>
+            <invocationTarget>First_Agent_Log_Account_Note</invocationTarget>
+            <invocationTargetType>flow</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>log_account_note</localDeveloperName>
+            <masterLabel>First Agent Log Account Note</masterLabel>
+            <progressIndicatorMessage>Logging notes</progressIndicatorMessage>
+            <source>First_Agent_Log_Account_Note</source>
+        </localActions>
+        <localActions>
+            <fullName>WebSearch_179Wt000000GrMv</fullName>
+            <description>Retrieves real-time information from the web. Use for questions about account news,
+market trends, competitor details, or any context not available in Salesforce CRM.</description>
+            <developerName>WebSearch_179Wt000000GrMv</developerName>
+            <invocationTarget>webSearchStream</invocationTarget>
+            <invocationTargetType>standardInvocableAction</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>WebSearch</localDeveloperName>
+            <masterLabel>Search The Web</masterLabel>
+            <progressIndicatorMessage>Searching the web</progressIndicatorMessage>
+            <source>EmployeeCopilot__WebSearch</source>
+        </localActions>
+        <localActions>
+            <fullName>draft_follow_up_email_179Wt000000GrMv</fullName>
+            <description>Drafts a professional follow-up email based on meeting notes.
+Call this when the user asks to draft a follow-up email after their notes have been logged.</description>
+            <developerName>draft_follow_up_email_179Wt000000GrMv</developerName>
+            <invocationTarget>First_Agent_Follow_Up_Email</invocationTarget>
+            <invocationTargetType>generatePromptResponse</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>draft_follow_up_email</localDeveloperName>
+            <masterLabel>First Agent Follow Up Email</masterLabel>
+            <progressIndicatorMessage>Drafting follow-up email</progressIndicatorMessage>
+            <source>First_Agent_Follow_Up_Email</source>
+        </localActions>
+        <localActions>
+            <fullName>getRecordFieldsAndValues_179Wt000000GrMv</fullName>
+            <description>Fetches fields and values from a Salesforce record by its ID and object type.
+Use this to retrieve Account details (including Name) when currentRecordId is available.
+Must be called before log_account_note when the account context comes from the record page.</description>
+            <developerName>getRecordFieldsAndValues_179Wt000000GrMv</developerName>
+            <invocationTarget>getRecordFieldsAndValues</invocationTarget>
+            <invocationTargetType>standardInvocableAction</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>getRecordFieldsAndValues</localDeveloperName>
+            <masterLabel>Extract Fields And Values From User Input</masterLabel>
+            <progressIndicatorMessage>Fetching account details</progressIndicatorMessage>
+            <source>EmployeeCopilot__ExtractFieldsAndValuesFromUserInput</source>
+        </localActions>
+        <localActions>
+            <fullName>AnswerQuestionsWithSalesforceDocumentation_179Wt000000GrMv</fullName>
+            <description>Answers questions about how to use Salesforce products using official Salesforce documentation.
+This action is automatically invoked if no other actions are available for the utterance.</description>
+            <developerName>AnswerQuestionsWithSalesforceDocumentation_179Wt000000GrMv</developerName>
+            <invocationTarget>answerQuestionsWithSalesforceDocumentation</invocationTarget>
+            <invocationTargetType>standardInvocableAction</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>AnswerQuestionsWithSalesforceDocumentation</localDeveloperName>
+            <masterLabel>Answer Questions with Salesforce Documentation (Beta)</masterLabel>
+            <progressIndicatorMessage>Searching Salesforce Documentation</progressIndicatorMessage>
+            <source>AdminCopilot__AnswerQuestionsWithSalesforceDocumentation</source>
+        </localActions>
+        <localActions>
+            <fullName>identify_account_179Wt000000GrMv</fullName>
+            <description>Searches for Salesforce Account records by name and returns a list of matching records.
+Use this when the user provides an account name instead of opening the agent from a record page.</description>
+            <developerName>identify_account_179Wt000000GrMv</developerName>
+            <invocationTarget>identifyRecordByName</invocationTarget>
+            <invocationTargetType>standardInvocableAction</invocationTargetType>
+            <isConfirmationRequired>false</isConfirmationRequired>
+            <isIncludeInProgressIndicator>true</isIncludeInProgressIndicator>
+            <localDeveloperName>identify_account</localDeveloperName>
+            <masterLabel>Identify Record by Name</masterLabel>
+            <progressIndicatorMessage>Searching for account</progressIndicatorMessage>
+            <source>EmployeeCopilot__IdentifyRecordByName</source>
+        </localActions>
+        <localDeveloperName>notes_assistant</localDeveloperName>
+        <masterLabel>Notes &amp; Use Cases Assistant</masterLabel>
+        <pluginType>Topic</pluginType>
+    </localTopics>
+    <masterLabel>First Agent Notes Assistant</masterLabel>
+    <plannerType>Atlas__ConcurrentMultiAgentOrchestration</plannerType>
+</GenAiPlannerBundle>
